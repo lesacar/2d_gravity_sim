@@ -9,29 +9,29 @@ ifndef verbose
 endif
 
 ifeq ($(config),debug)
-  gigafry_bot_config = debug
+  2d_gravity_sim_config = debug
 
 else ifeq ($(config),release)
-  gigafry_bot_config = release
+  2d_gravity_sim_config = release
 
 else
   $(error "invalid configuration $(config)")
 endif
 
-PROJECTS := gigafry_bot
+PROJECTS := 2d_gravity_sim
 
 .PHONY: all clean help $(PROJECTS) 
 
 all: $(PROJECTS)
 
-gigafry_bot:
-ifneq (,$(gigafry_bot_config))
-	@echo "==== Building gigafry_bot ($(gigafry_bot_config)) ===="
-	@${MAKE} --no-print-directory -C . -f gigafry_bot.make config=$(gigafry_bot_config)
+2d_gravity_sim:
+ifneq (,$(2d_gravity_sim_config))
+	@echo "==== Building 2d_gravity_sim ($(2d_gravity_sim_config)) ===="
+	@${MAKE} --no-print-directory -C . -f 2d_gravity_sim.make config=$(2d_gravity_sim_config)
 endif
 
 clean:
-	@${MAKE} --no-print-directory -C . -f gigafry_bot.make clean
+	@${MAKE} --no-print-directory -C . -f 2d_gravity_sim.make clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
@@ -43,6 +43,6 @@ help:
 	@echo "TARGETS:"
 	@echo "   all (default)"
 	@echo "   clean"
-	@echo "   gigafry_bot"
+	@echo "   2d_gravity_sim"
 	@echo ""
 	@echo "For more information, see https://github.com/premake/premake-core/wiki"
