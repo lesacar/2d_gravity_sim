@@ -7,6 +7,7 @@ project "2d_gravity_sim"
    kind "WindowedApp"
    ignoredefaultlibraries { "MSVCRT", "MSVCRTD"}
    language "C++"
+   cppdialect "C++23"
    -- staticruntime "Off"
    targetdir "bin/%{cfg.buildcfg}"
    toolset "clang"
