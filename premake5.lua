@@ -1,4 +1,5 @@
-require "export-compile-commands"
+require "vendor/premake/export-compile-commands"
+-- require "export-compile-commands"
 
 workspace "2d_gravity_sim"
    configurations { "Debug", "Release" }
