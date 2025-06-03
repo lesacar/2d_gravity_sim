@@ -35,6 +35,21 @@ void Draw_particle(Particle& particle) {
 
 void processParticles(Particle* particles[], size_t count) {
     for (size_t i = 0; i < count; ++i) {
+        // right and bottom screen edge
+        if (particles[i]->position.x > GetScreenWidth()) {
+            particles[i]->velocity.x *= -1;
+        }
+        if (particles[i]->position.y > GetScreenHeight()) {
+            particles[i]->velocity.y *= -1;
+        }
+        // left and top screen edge
+        if (particles[i]->position.x < 0) {
+            particles[i]->velocity.x *= -1;
+        }
+        if (particles[i]->position.y < 0) {
+            particles[i]->velocity.y *= -1;
+        }
+
         particles[i]->position.x += particles[i]->velocity.x;
         particles[i]->position.y += particles[i]->velocity.y;
         particles[i]->density = particles[i]->mass/particles[i]->radius;
@@ -53,21 +68,21 @@ int main (int argc, char *argv[]) {
     Particle** particles = (Particle**)malloc(sizeof(Particle*) * initial_particles_count);
 
     Particle first_particle = {
-        .mass = 1.0f,
-        .radius = 3.0f,
-        .velocity = {0.1f, 0.1f },
+        .mass = 5.0f,
+        .radius = 15.0f,
+        .velocity = {0.2f, 0.2f },
         .position = {(float)initial_screen_size.w/2, (float)initial_screen_size.h/2}
     };
     Particle second_particle = {
-        .mass = 1333.0f,
-        .radius = 4.0f,
-        .velocity = {0.1f, 0.15f },
+        .mass = 6665.0f,
+        .radius = 20.0f,
+        .velocity = {0.3f, 0.15f },
         .position = {(float)initial_screen_size.w/2, (float)initial_screen_size.h/2}
     };
     Particle third_particle = {
-        .mass = 6000.0f,
-        .radius = 6.0f,
-        .velocity = {0.1f, 0.05f },
+        .mass = 30000.0f,
+        .radius = 30.0f,
+        .velocity = {0.15f, 0.3f },
         .position = {(float)initial_screen_size.w/2, (float)initial_screen_size.h/2}
     };
 
