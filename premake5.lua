@@ -6,7 +6,6 @@ workspace "2d_gravity_sim"
 
 project "2d_gravity_sim"
    kind "WindowedApp"
-   ignoredefaultlibraries { "MSVCRT", "MSVCRTD"}
    language "C++"
    cppdialect "C++23"
    -- staticruntime "Off"
@@ -15,16 +14,20 @@ project "2d_gravity_sim"
 
    files { "**.h", "src/**.cpp", "src/**.c" }
    includedirs { "vendor/raylib/build/raylib/include", "src/include", "vendor/json/include" }
-   libdirs { "vendor/raylib/build/raylib"}
 
    links { "raylib" }
 
-   -- VERY IMPORTANT WITHOUT THIS YOU WILL NEVER COMPILE AND GET 5 MILLION LINKER ERRORS
-   linkoptions { "-Xlinker /NODEFAULTLIB:libcmt" }
    -- defines { "" }
 
    filter "system:windows"
+      ignoredefaultlibraries { "MSVCRT", "MSVCRTD"}
+      -- VERY IMPORTANT WITHOUT THIS YOU WILL NEVER COMPILE AND GET 5 MILLION LINKER ERRORS
+      linkoptions { "-Xlinker /NODEFAULTLIB:libcmt" }
       links { "winmm", "shell32", "user32", "gdi32"}
+      libdirs { "vendor/raylib/build/raylib"}
+
+   filter "system:linux"
+      libdirs { "vendor/raylib/build-linux/raylib"}
 
    filter "configurations:Debug"
       defines { "DEBUG" }
