@@ -30,10 +30,18 @@ void windowControls(window_controls_data& wd) {
         wd.G -= GetFrameTime() * 0.1f;
     }
     if (GetMouseWheelMove() != 0.0f) {
-        wd.camera.zoom = expf(logf(wd.camera.zoom) + ((float)GetMouseWheelMoveV().y*0.1f));
+        Vector2 mouse_world_before = GetScreenToWorld2D(GetMousePosition(), wd.camera);
+
+        wd.camera.zoom *= (1.0f + GetMouseWheelMove() * 0.1f);
+
+        Vector2 mouse_world_after = GetScreenToWorld2D(GetMousePosition(), wd.camera);
+        wd.camera.target.x += (mouse_world_before.x - mouse_world_after.x);
+        wd.camera.target.y += (mouse_world_before.y - mouse_world_after.y);
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        wd.camera.target -= GetMouseDelta() * GetFrameTime()*200;
+        Vector2 mouse_move_delta = GetMouseDelta();
+        wd.camera.target.x -= mouse_move_delta.x / wd.camera.zoom;
+        wd.camera.target.y -= mouse_move_delta.y / wd.camera.zoom;
     }
     return;
 }

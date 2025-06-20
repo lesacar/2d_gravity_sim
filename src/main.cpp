@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <math.h>
 #include <helper.h>
 #include <stdlib.h>
@@ -39,18 +40,24 @@ void processParticles(Particle* particles[], size_t count) {
 
 
 
-void newtonian_gravity(Particle** particles, size_t count, float dt, window_controls_data& wd) {
+void newtonian_gravity(Particle** particles, size_t count, window_controls_data& wd) {
     float G = wd.G;
-    dt = 1.0f/60.0f;
+    float dt = 1.0f/60.0f;
 
     for (size_t i = 0; i < count; ++i) {
         for (size_t j = i + 1; j < count; ++j) {
             Particle* p1 = particles[i];
             Particle* p2 = particles[j];
 
+            // printf("i: %zu, j: %zu\n", i, j);
+
+            // printf("p1: %f,%f\n",p1->position.x, p1->position.y);
+            // printf("p2: %f,%f\n",p2->position.x, p2->position.y);
             Vector2 direction = Vector2Subtract(p2->position, p1->position);
             float distance_squared = Vector2DotProduct(direction, direction);
+
             if (distance_squared < 0.1f) distance_squared = 0.1f;
+
 
             float distance = sqrtf(distance_squared);
             Vector2 norm_dir = Vector2Scale(direction, 1.0f / distance);
@@ -76,9 +83,8 @@ int main (int argc, char *argv[]) {
     Vector2 initial_screen_size(GetScreenWidth(), GetScreenHeight());
     bool running = true;
 
-    size_t initial_particles_count = 3;
+    size_t initial_particles_count = 1000;
     Particle** particles = (Particle**)malloc(sizeof(Particle*) * initial_particles_count);
-
 
     // if we should show fps, frametime, other stuff like that
     window_controls_data wd {
@@ -91,43 +97,22 @@ int main (int argc, char *argv[]) {
     wd.camera.zoom = 1.0f;
     wd.camera.target = Vector2Zero();
 
-    // star
-    Particle third_particle = {
-        .mass = 10000.0f,
-        .radius = 15.0f,
-        .velocity = { 0.0f, 0.0f },
-        .position = {(float)(initial_screen_size.x / 2), (float)(initial_screen_size.y / 2)}
-    };
 
-    float r1 = 150.0f;
-    float r2 = 100.0f;
+    for (size_t i = 0; i < initial_particles_count; ++i) {
+        Particle temp = {
+            .mass = (float)GetRandomValue(10, 50000),
+            .radius = (float)GetRandomValue(1, 20),
+            .velocity = Vector2Zero(),
+            .position = Vector2{(float)GetRandomValue(0, initial_screen_size.x), (float)GetRandomValue(0, initial_screen_size.y)},
+        };
+        particles[i] = (Particle*)malloc(sizeof(Particle));
+        *particles[i] = temp;
+    }
+    // wow, so we first initialized the sequential memory in the loop above but then put the address of third particle, which is somewhere completely random, into particles[0], so particles[1] wasnt the actually memory we did in the loop but now instead it was whereever third_particle was + some offset...
+    // i love c++
+    // particles[0] = &third_particle;
 
-    float v1 = sqrtf(wd.G * third_particle.mass / r1);
-    float v2 = sqrtf(wd.G * third_particle.mass / r2);
-
-    Particle first_particle = {
-        .mass = 10.0f,
-        .radius = 5.0f,
-        .velocity = { 0.0f, v1 * 0.04f },
-        .position = { third_particle.position.x + r1, third_particle.position.y }
-    };
-
-    Particle second_particle = {
-        .mass = 20.0f,
-        .radius = 7.0f,
-        .velocity = { v2 * 0.04f, 0.0f },
-        .position = { third_particle.position.x, third_particle.position.y - r2 }
-    };
-
-
-
-
-
-    particles[0] = &first_particle;
-    particles[1] = &second_particle;
-    particles[2] = &third_particle;
     while (running && !WindowShouldClose()) {
-
         BeginDrawing();
         ClearBackground(BLACK);
         if (wd.sim_debug_info) {
@@ -140,13 +125,14 @@ int main (int argc, char *argv[]) {
         // not sure if simulation keypresses will be handled here or elsewhere yet
         windowControls(wd);
 
-        newtonian_gravity(particles, initial_particles_count, GetFrameTime(), wd);
+        newtonian_gravity(particles, initial_particles_count, wd);
+        // printf("we got here\n");
         processParticles(particles, initial_particles_count);
 
         BeginMode2D(wd.camera);
-        Draw_particle(first_particle);
-        Draw_particle(second_particle);
-        Draw_particle(third_particle);
+        for (size_t i = 0; i < initial_particles_count; ++i) {
+            Draw_particle(*particles[i]);
+        }
         EndMode2D();
 
         EndDrawing();

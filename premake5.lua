@@ -28,6 +28,13 @@ project "2d_gravity_sim"
    filter "configurations:Debug"
       defines { "DEBUG" }
       symbols "On"
+      optimize "Off"
+      buildoptions {
+        "-g",
+        "-fstandalone-debug",
+        "-O0",
+        "-fno-omit-frame-pointer",
+      }
       -- runtime "Debug"     -- Use debug runtime (msvcrtd.lib or equivalent)
 
    filter "configurations:Release"
