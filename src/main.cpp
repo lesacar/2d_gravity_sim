@@ -1,3 +1,11 @@
+// TODO:
+// remove particles farther then arbitrary distance, e.g. 1e10f both vertically or horizontally
+// use std::vector instead of pointer array, just to clean up stuff a bit hopefully
+// eventually move to GPU calculations, tho this is a distant goal, first is to make this actually be better
+// clean up useless calculations
+
+
+#include <cfloat>
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
@@ -11,34 +19,41 @@
 #include <raymath.h>
 #include <raylib.h>
 
-
-struct ivec2 {
-    union {
-        struct { int x, y; };
-        struct { int w, h; };
-    };
-
-    ivec2() : x(0), y(0) {}
-    ivec2(int x_, int y_) : x(x_), y(y_) {}
-};
-
-void Draw_particle(Particle& particle) {
-    // color gets more red when particles are denser
-    Color particle_color = {255, (unsigned char)(int)(Clamp(255.0f-(0.256f*particle.density), 0.0f, 255.0f)), (unsigned char)(int)(Clamp(255.0f-(0.256f*particle.density), 0.0f, 255.0f)), 255};
-    // Clamp(255-(0.256f*particle.density), 0.0f, 255.0f);
-    // printf("Color: r:%u g:%u b:%u\n", particle_color.r, particle_color.g, particle_color.b);
-    DrawCircleV(particle.position, particle.radius, particle_color);
-}
-
-void processParticles(Particle* particles[], size_t count) {
+void ProcessAndDrawParticles(Particle* particles[], size_t count) {
+    // Update physics first
     for (size_t i = 0; i < count; ++i) {
         particles[i]->position.x += particles[i]->velocity.x;
         particles[i]->position.y += particles[i]->velocity.y;
-        particles[i]->density = particles[i]->mass/particles[i]->radius;
     }
-};
 
+    // Calculate density range (logarithmic for better distribution)
+    float min_density = FLT_MAX;
+    float max_density = -FLT_MAX;
+    for (size_t i = 0; i < count; ++i) {
+        particles[i]->density = particles[i]->mass / particles[i]->radius;
+        min_density = fminf(min_density, particles[i]->density);
+        max_density = fmaxf(max_density, particles[i]->density);
+    }
+    float log_min = log10f(min_density);
+    float log_range = log10f(max_density) - log_min;
 
+    // Draw with continuous color spectrum
+    for (size_t i = 0; i < count; ++i) {
+        // Normalize to [0,1] using logarithmic scale
+        float t = (log10f(particles[i]->density) - log_min) / log_range;
+        t = Clamp(t, 0.0f, 1.0f);
+
+        // Dynamic HSL interpolation (Hue: 240°→0°, Saturation: 100%, Lightness: 50%)
+        float hue = 240.0f * (1.0f - t); // Blue (240°) to Red (0°)
+        Color c = ColorFromHSV(hue, 1.0f, 0.5f);
+
+        // Optional: Add brightness variation for more depth
+        c.r *= 0.8f + 0.2f * sinf(particles[i]->position.x * 0.01f);
+        c.g *= 0.8f + 0.2f * cosf(particles[i]->position.y * 0.01f);
+
+        DrawCircleV(particles[i]->position, particles[i]->radius, c);
+    }
+}
 
 void newtonian_gravity(Particle** particles, size_t count, window_controls_data& wd) {
     float G = wd.G;
@@ -108,6 +123,8 @@ int main (int argc, char *argv[]) {
         particles[i] = (Particle*)malloc(sizeof(Particle));
         *particles[i] = temp;
     }
+    particles[0]->mass = 1e10f;
+    particles[0]->radius = 100.0f;
     // wow, so we first initialized the sequential memory in the loop above but then put the address of third particle, which is somewhere completely random, into particles[0], so particles[1] wasnt the actually memory we did in the loop but now instead it was whereever third_particle was + some offset...
     // i love c++
     // particles[0] = &third_particle;
@@ -115,25 +132,23 @@ int main (int argc, char *argv[]) {
     while (running && !WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(BLACK);
+        // where we handle things like toggling vsync and similar windowing stuff
+        // not sure if simulation keypresses will be handled here or elsewhere yet
+        windowControls(wd);
+
+        newtonian_gravity(particles, initial_particles_count, wd);
+
+        BeginMode2D(wd.camera);
+        ProcessAndDrawParticles(particles, initial_particles_count);
+        EndMode2D();
+
         if (wd.sim_debug_info) {
             DrawText(TextFormat("%04d FPS", GetFPS()), 10, 10, 20, WHITE);
             DrawText(TextFormat("FrameTime: %.2f ms", GetFrameTime()*1000.0f), 10, 30, 20, WHITE);
             DrawText(TextFormat("G = %.5f", wd.G), 10, 50, 20, WHITE);
             DrawText(TextFormat("camera.zoom = %1.2f", wd.camera.zoom), 10, 70, 20, WHITE);
         }
-        // where we handle things like toggling vsync and similar windowing stuff
-        // not sure if simulation keypresses will be handled here or elsewhere yet
-        windowControls(wd);
 
-        newtonian_gravity(particles, initial_particles_count, wd);
-        // printf("we got here\n");
-        processParticles(particles, initial_particles_count);
-
-        BeginMode2D(wd.camera);
-        for (size_t i = 0; i < initial_particles_count; ++i) {
-            Draw_particle(*particles[i]);
-        }
-        EndMode2D();
 
         EndDrawing();
     }
