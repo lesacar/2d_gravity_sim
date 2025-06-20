@@ -1,4 +1,7 @@
-require "export-compile-commands"
+package.path = package.path .. ";./vendor/premake/export-compile-commands/?.lua"
+
+
+require ("export-compile-commands")
 
 workspace "2d_gravity_sim"
    configurations { "Debug", "Release" }
