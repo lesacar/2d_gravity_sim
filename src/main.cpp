@@ -48,8 +48,8 @@ void ProcessAndDrawParticles(Particle* particles[], size_t count) {
         Color c = ColorFromHSV(hue, 1.0f, 0.5f);
 
         // Optional: Add brightness variation for more depth
-        c.r *= 0.8f + 0.2f * sinf(particles[i]->position.x * 0.01f);
-        c.g *= 0.8f + 0.2f * cosf(particles[i]->position.y * 0.01f);
+        // c.r *= 0.8f + 0.2f * sinf(particles[i]->position.x * 0.01f);
+        // c.g *= 0.8f + 0.2f * cosf(particles[i]->position.y * 0.01f);
 
         DrawCircleV(particles[i]->position, particles[i]->radius, c);
     }
